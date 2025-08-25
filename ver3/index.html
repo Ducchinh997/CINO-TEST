@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wedding Website</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+</head>
+<body>
+  <!-- 🏞 HERO -->
+  <section class="hero">
+    <div class="overlay">
+      <h1 id="couple-names"></h1>
+      <p id="wedding-date"></p>
+      <div id="countdown"></div>
+    </div>
+    <canvas id="particles"></canvas>
+  </section>
+
+  <!-- 👩‍❤️‍👨 COUPLE -->
+  <section id="couple"></section>
+
+  <!-- 📖 TIMELINE -->
+  <section id="timeline">
+    <h2>Chuyện Tình Yêu</h2>
+    <ul id="timeline-list"></ul>
+  </section>
+
+  <!-- 📅 CALENDAR -->
+  <section id="calendar">
+    <h2>Lịch Cưới</h2>
+    <div id="calendar-container"></div>
+  </section>
+
+  <!-- 🎉 EVENTS -->
+  <section id="events">
+    <h2>Sự Kiện Cưới</h2>
+    <div id="event-list"></div>
+  </section>
+
+  <!-- 📸 ALBUM -->
+  <section id="album">
+    <h2>Album Ảnh Cưới</h2>
+    <div id="gallery" class="gallery"></div>
+  </section>
+
+  <!-- 🎥 VIDEO -->
+  <section id="video">
+    <h2>Video Cưới</h2>
+    <div class="video-container">
+      <iframe id="wedding-video" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </section>
+
+  <!-- ✍ RSVP -->
+  <section id="rsvp">
+    <h2>Xác Nhận Tham Dự</h2>
+    <form id="rsvp-form" action="https://formspree.io/f/your-id-here" method="POST">
+      <input type="text" name="name" placeholder="Họ tên" required>
+      <input type="tel" name="phone" placeholder="Số điện thoại" required>
+      <input type="number" name="guests" placeholder="Số khách" required>
+      <button type="submit">Gửi</button>
+    </form>
+  </section>
+
+  <!-- 💝 BANK/QR -->
+  <section id="gift">
+    <h2>Mừng Cưới</h2>
+    <div class="qr-box">
+      <img id="bank-qr1" alt="QR 1">
+      <p id="bank-info1"></p>
+    </div>
+    <div class="qr-box">
+      <img id="bank-qr2" alt="QR 2">
+      <p id="bank-info2"></p>
+    </div>
+  </section>
+
+  <!-- 📌 FOOTER -->
+  <footer>
+    <p>Thiết kế bởi CINO Studio</p>
+  </footer>
+
+  <!-- SCRIPT render data -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Names & Date
+      document.getElementById("couple-names").innerText = `${weddingConfig.couple.groom.name} ♥ ${weddingConfig.couple.bride.name}`;
+      document.getElementById("wedding-date").innerText = `Ngày cưới: ${weddingConfig.date}`;
+
+      // Couple
+      const coupleDiv = document.getElementById("couple");
+      coupleDiv.innerHTML = `
+        <div class="groom">
+          <img src="images/${weddingConfig.couple.groom.img}" alt="Chú rể">
+          <h2>${weddingConfig.couple.groom.name}</h2>
+          <p>${weddingConfig.couple.groom.desc}</p>
+        </div>
+        <div class="bride">
+          <img src="images/${weddingConfig.couple.bride.img}" alt="Cô dâu">
+          <h2>${weddingConfig.couple.bride.name}</h2>
+          <p>${weddingConfig.couple.bride.desc}</p>
+        </div>`;
+
+      // Timeline
+      const timelineList = document.getElementById("timeline-list");
+      weddingConfig.timeline.forEach(item => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${item.year}</span> - ${item.text}`;
+        timelineList.appendChild(li);
+      });
+
+      // Calendar
+      const calDiv = document.getElementById("calendar-container");
+      const date = new Date(weddingConfig.date);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      let calHtml = `<table><tr>`;
+      const days = ["CN","T2","T3","T4","T5","T6","T7"];
+      days.forEach(d => calHtml += `<th>${d}</th>`);
+      calHtml += `</tr><tr>`;
+      const firstDay = new Date(year, month, 1).getDay();
+      for(let i=0; i<firstDay; i++) calHtml += `<td></td>`;
+      const lastDate = new Date(year, month+1, 0).getDate();
+      for(let d=1; d<=lastDate; d++){
+        const isWedding = (d === date.getDate());
+        calHtml += `<td class='${isWedding?"wedding-day":""}'>${isWedding?"❤":d}</td>`;
+        if((d+firstDay)%7===0) calHtml += `</tr><tr>`;
+      }
+      calHtml += `</tr></table>`;
+      calDiv.innerHTML = calHtml;
+
+      // Events
+      const eventList = document.getElementById("event-list");
+      weddingConfig.events.forEach(ev => {
+        const div = document.createElement("div");
+        div.className = "event";
+        div.innerHTML = `
+          <h3>${ev.title}</h3>
+          <p>${ev.time} - ${ev.place}</p>
+          <a href="${ev.map}" target="_blank">Xem bản đồ</a>
+          <a href="${ev.ics}">Thêm vào lịch</a>`;
+        eventList.appendChild(div);
+      });
+
+      // Album
+      const gallery = document.getElementById("gallery");
+      weddingConfig.album.forEach(img => {
+        const el = document.createElement("img");
+        el.src = `images/${img}`;
+        el.alt = "Ảnh cưới";
+        gallery.appendChild(el);
+      });
+
+      // Video
+      document.getElementById("wedding-video").src = weddingConfig.video;
+
+      // Bank QR
+      document.getElementById("bank-qr1").src = `images/${weddingConfig.bank.qr1}`;
+      document.getElementById("bank-info1").innerText = `${weddingConfig.bank.name1} - ${weddingConfig.bank.account1} - ${weddingConfig.bank.owner1}`;
+      document.getElementById("bank-qr2").src = `images/${weddingConfig.bank.qr2}`;
+      document.getElementById("bank-info2").innerText = `${weddingConfig.bank.name2} - ${weddingConfig.bank.account2} - ${weddingConfig.bank.owner2}`;
+    });
+
+    // Particles effect
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = Array.from({length:100}, () => ({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*2+1,
+      d: Math.random()*0.5+0.5
+    }));
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "rgba(201,166,70,0.8)";
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+      });
+      update();
+    }
+    function update(){
+      particles.forEach(p => {
+        p.y += p.d;
+        if(p.y > canvas.height){
+          p.y = 0; p.x = Math.random()*canvas.width;
+        }
+      });
+    }
+    setInterval(draw, 30);
+  </script>
+</body>
+</html>
